@@ -29,6 +29,7 @@ module Standard
       {
         ruby_version: Gem::Version.new((standard_yaml["ruby_version"] || RUBY_VERSION)),
         fix: !!standard_yaml["fix"],
+        runner: standard_yaml["runner"],
         format: standard_yaml["format"],
         parallel: !!standard_yaml["parallel"],
         ignore: expand_ignore_config(standard_yaml["ignore"]),

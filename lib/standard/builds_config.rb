@@ -3,7 +3,7 @@ require_relative "merges_settings"
 require_relative "creates_config_store"
 
 module Standard
-  Config = Struct.new(:runner, :paths, :rubocop_options, :rubocop_config_store)
+  Config = Struct.new(:runner, :paths, :rubocop_options, :rubocop_config_store, :standard_options, :rubocop_cli_flags)
 
   class BuildsConfig
     def initialize
@@ -19,7 +19,9 @@ module Standard
         settings.runner,
         settings.paths,
         settings.options,
-        @creates_config_store.call(standard_config)
+        @creates_config_store.call(standard_config),
+        standard_config,
+        settings.rubocop_cli_flags
       )
     end
   end

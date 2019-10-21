@@ -2,17 +2,20 @@ require "rubocop"
 
 module Standard
   class MergesSettings
-    Settings = Struct.new(:runner, :options, :paths)
+    Settings = Struct.new(:runner, :options, :paths, :rubocop_cli_flags)
 
     def call(argv, standard_yaml)
       standard_argv, rubocop_argv = separate_argv(argv)
       standard_cli_flags = parse_standard_argv(standard_argv)
       rubocop_cli_flags, lint_paths = RuboCop::Options.new.parse(rubocop_argv)
 
+      options = merge(standard_yaml, standard_cli_flags, without_banned(rubocop_cli_flags))
+
       Settings.new(
-        determine_command(standard_argv),
-        merge(standard_yaml, standard_cli_flags, without_banned(rubocop_cli_flags)),
-        lint_paths
+        determine_command(standard_argv, standard_yaml),
+        options,
+        lint_paths,
+        rubocop_cli_flags,
       )
     end
 
@@ -20,7 +23,7 @@ module Standard
 
     def separate_argv(argv)
       argv.partition { |flag|
-        ["--fix", "--no-fix", "--version", "-v", "--help", "-h"].include?(flag)
+        ["--fix", "--no-fix", "--rubocop-daemon", "--version", "-v", "--help", "-h"].include?(flag)
       }
     end
 
@@ -36,11 +39,15 @@ module Standard
       }
     end
 
-    def determine_command(argv)
+    def determine_command(argv, standard_options)
       if (argv & ["--help", "-h"]).any?
         :help
       elsif (argv & ["--version", "-v"]).any?
         :version
+      elsif (argv & ["--rubocop-daemon"]).any?
+        :rubocop_daemon
+      elsif (runner = standard_options[:runner])
+        runner
       else
         :rubocop
       end
